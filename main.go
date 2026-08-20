@@ -42,24 +42,26 @@ func main() {
 		log.Fatalf("failed to create Kubernetes client: %v", err)
 	}
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+	http.HandleFunc("GET /healthz", healthHandler)
 
-		response := healthResponse{
-			Status: "healthy",
-		}
-
-		if err := json.NewEncoder(w).Encode(response); err != nil {
-			log.Printf("failed to encode health response: %v", err)
-		}
-	})
-
-	http.HandleFunc("/api/cluster", clusterHandler(clientset))
+	http.HandleFunc("GET /api/cluster", clusterHandler(clientset))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func clusterHandler(clientset *kubernetes.Clientset) http.HandlerFunc {
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	response := healthResponse{
+		Status: "healthy",
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("failed to encode health response: %v", err)
+	}
+}
+
+func clusterHandler(clientset kubernetes.Interface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		nodes, err := clientset.CoreV1().Nodes().List(
