@@ -117,3 +117,63 @@ func TestClusterHandlerNodeError(t *testing.T) {
 		)
 	}
 }
+
+func TestNamespaceHandler(t *testing.T) {
+	clientset := fake.NewSimpleClientset(
+		&corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "default",
+			},
+			Status: corev1.NamespaceStatus{
+				Phase: corev1.NamespaceActive,
+			},
+		},
+		&corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "argocd",
+			},
+			Status: corev1.NamespaceStatus{
+				Phase: corev1.NamespaceActive,
+			},
+		},
+	)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/namespaces", nil)
+	rr := httptest.NewRecorder()
+
+	namespaceHandler(clientset)(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, rr.Code)
+	}
+
+	var response []namespaceResponse
+
+	if err := json.NewDecoder(rr.Body).Decode(&response); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if len(response) != 2 {
+		t.Fatalf("expected 2 namespaces, got %d", len(response))
+	}
+
+	namespaces := map[string]string{}
+
+	for _, namespace := range response {
+		namespaces[namespace.Name] = namespace.Status
+	}
+
+	if namespaces["default"] != "Active" {
+		t.Errorf(
+			"expected default namespace to be Active, got %s",
+			namespaces["default"],
+		)
+	}
+
+	if namespaces["argocd"] != "Active" {
+		t.Errorf(
+			"expected argocd namespace to be Active, got %s",
+			namespaces["argocd"],
+		)
+	}
+}

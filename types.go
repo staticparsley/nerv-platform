@@ -9,3 +9,8 @@ type clusterResponse struct {
 	Nodes  int    `json:"nodes"`
 	Pods   int    `json:"pods"`
 }
+
+type namespaceResponse struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}

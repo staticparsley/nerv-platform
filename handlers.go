@@ -55,3 +55,35 @@ func clusterHandler(clientset kubernetes.Interface) http.HandlerFunc {
 		}
 	}
 }
+
+func namespaceHandler(clientset kubernetes.Interface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		namespaces, err := clientset.CoreV1().Namespaces().List(
+			r.Context(),
+			metav1.ListOptions{},
+		)
+
+		if err != nil {
+			http.Error(w, "failed to query Kubernetes namespace", http.StatusInternalServerError)
+			return
+		}
+
+		response := []namespaceResponse{}
+
+		for _, namespace := range namespaces.Items {
+			item := namespaceResponse{
+				Name:   namespace.Name,
+				Status: string(namespace.Status.Phase),
+			}
+
+			response = append(response, item)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			log.Printf("failed to encode namespace response: %v", err)
+		}
+
+	}
+}
