@@ -113,10 +113,17 @@ func deploymentsHandler(clientset kubernetes.Interface) http.HandlerFunc {
 				desired = *deployment.Spec.Replicas
 			}
 
+			status := "healthy"
+
+			if deployment.Status.ReadyReplicas < desired {
+				status = "degraded"
+			}
+
 			item := deploymentResponse{
 				Name:    deployment.Name,
 				Ready:   deployment.Status.ReadyReplicas,
 				Desired: desired,
+				Status:  status,
 			}
 
 			response = append(response, item)

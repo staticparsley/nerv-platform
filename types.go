@@ -19,4 +19,5 @@ type deploymentResponse struct {
 	Name    string `json:"name"`
 	Ready   int32  `json:"ready"`
 	Desired int32  `json:"desired"`
+	Status  string `json:"status"`
 }
