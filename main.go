@@ -7,19 +7,13 @@ import (
 	"path/filepath"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 func main() {
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalf("failed to determine user home directory: %v", err)
-	}
-
-	kubeconfig := filepath.Join(home, ".kube", "config")
-
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	config, err := kubernetesConfig()
 
 	if err != nil {
 		log.Fatalf("failed to build Kubernetes config: %v", err)
@@ -38,4 +32,20 @@ func main() {
 
 	http.HandleFunc("GET /api/namespaces/{namespace}/deployments", deploymentsHandler(clientset))
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func kubernetesConfig() (*rest.Config, error) {
+	config, err := rest.InClusterConfig()
+	if err == nil {
+		return config, nil
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	kubeconfig := filepath.Join(home, ".kube", "config")
+
+	return clientcmd.BuildConfigFromFlags("", kubeconfig)
 }
