@@ -87,3 +87,45 @@ func namespaceHandler(clientset kubernetes.Interface) http.HandlerFunc {
 
 	}
 }
+
+func deploymentsHandler(clientset kubernetes.Interface) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		namespace := r.PathValue("namespace")
+
+		deployments, err := clientset.AppsV1().Deployments(namespace).List(
+			r.Context(),
+			metav1.ListOptions{},
+		)
+		if err != nil {
+			http.Error(
+				w,
+				"failed to query Kubernetes deployments",
+				http.StatusInternalServerError,
+			)
+		}
+
+		response := []deploymentResponse{}
+
+		for _, deployment := range deployments.Items {
+			desired := int32(1)
+
+			if deployment.Spec.Replicas != nil {
+				desired = *deployment.Spec.Replicas
+			}
+
+			item := deploymentResponse{
+				Name:    deployment.Name,
+				Ready:   deployment.Status.ReadyReplicas,
+				Desired: desired,
+			}
+
+			response = append(response, item)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			log.Printf("failed to encode deployments response: %v", err)
+		}
+	}
+}

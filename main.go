@@ -35,5 +35,7 @@ func main() {
 	http.HandleFunc("GET /api/cluster", clusterHandler(clientset))
 
 	http.HandleFunc("GET /api/namespaces", namespaceHandler(clientset))
+
+	http.HandleFunc("GET /api/namespaces/{namespace}/deployments", deploymentsHandler(clientset))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
