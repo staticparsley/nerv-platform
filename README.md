@@ -175,6 +175,7 @@ NERV currently uses an internal certificate authority, so clients that do not tr
 - Argo CD / GitOps
 - ingress-nginx
 - cert-manager
+- Go CLI
 
 Planned integrations include Prometheus, the Argo CD API, and a web frontend.
 
@@ -223,6 +224,7 @@ When running locally, NERV Platform uses the current kubeconfig. When deployed i
 - [x] GitOps deployment through Argo CD
 - [x] Kubernetes Service
 - [x] Internal HTTPS ingress
+- [x] Developer CLI
 
 ### Future
 
@@ -241,3 +243,78 @@ When running locally, NERV Platform uses the current kubeconfig. When deployed i
 NERV Platform is built around actual operational needs discovered while running the NERV homelab.
 
 Features are added when they solve real platform friction rather than to reproduce Kubernetes functionality that already exists elsewhere. The platform should provide opinionated abstractions, useful defaults, and clear health signals while leaving lower-level operational tools available when deeper investigation is required.
+
+## CLI
+
+NERV Platform includes a small developer CLI for interacting with the platform API.
+
+The CLI provides a simpler interface for common platform operations without requiring direct interaction with Kubernetes.
+
+Build the CLI:
+
+```bash
+go build -o nerv ./cmd/nerv
+```
+
+### Cluster Status
+
+View basic cluster health and resource counts:
+
+```bash
+./nerv cluster
+```
+
+Example:
+
+```text
+NERV Cluster
+
+Status: healthy
+Nodes:  1
+Pods:   44
+```
+
+### Namespaces
+
+List namespaces and their current status:
+
+```bash
+./nerv namespaces
+```
+
+### Deployments
+
+View deployment health for a namespace:
+
+```bash
+./nerv deployments <namespace>
+```
+
+Example:
+
+```bash
+./nerv deployments nerv-platform
+```
+
+```text
+Deployments in nerv-platform
+
+nerv-platform                1/1  healthy
+```
+
+The CLI communicates with the NERV Platform API rather than directly with the Kubernetes API.
+
+```text
+Developer
+    |
+    v
+NERV CLI
+    |
+    v
+NERV Platform API
+    |
+    v
+Kubernetes API
+```
+
+> **Note:** The current CLI is intended for the NERV homelab environment and skips TLS certificate verification when connecting to the platform API. A production implementation would validate the server certificate against a trusted CA.
