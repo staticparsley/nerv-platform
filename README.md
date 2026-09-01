@@ -317,4 +317,7 @@ NERV Platform API
 Kubernetes API
 ```
 
+
+
+
 > **Note:** The current CLI is intended for the NERV homelab environment and skips TLS certificate verification when connecting to the platform API. A production implementation would validate the server certificate against a trusted CA.
